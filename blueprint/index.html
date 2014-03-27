@@ -1,0 +1,1659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js"></script>
+<meta charset="utf-8">
+<title>Blueprint</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Blueprint</title>
+    <link rel="stylesheet" href="css/fonts.css" type="text/css" charset="utf-8" />
+    <link rel="stylesheet" href="css/solarized-light.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="css/style.css" type="text/css" charset="utf-8" />
+    <link rel="stylesheet" href="css/prettify-solarized.css" type="text/css" charset="utf-8" />
+    <link rel="stylesheet" href="css/magnific-popup.css" type="text/css" charset="utf-8"> 
+
+<!-- WMF Changes:
+
+- Added 4 linked resources above
+
+- To Solarize the Prettified code, I had to replace <pre> with <pre class="prettyprint"> in the body below.  For some reason, I could not work around by simply trying to style <pre>
+
+- Commented out Plumbing Header in TOC just to shorten length of non-scrolling MAN panel
+
+- Commented out Google analytics while working locally
+
+- Style credits added to footer
+
+-->
+
+</head>
+<body>
+<h1 id='blueprint'>Blueprint</h1>
+<p>Blueprint is a simple configuration management tool that reverse-engineers servers. It figures out what you&#8217;ve done manually, stores it locally in a Git repository, generates code that&#8217;s able to recreate your efforts, and helps you deploy those changes to production.</p>
+<div id="toca-switch">TOC
+<div id="toca-panel">
+<h2 id='toc'>Table of contents</h2>
+<ol>
+<li><a class="video" title="Philosophy" href="http://youtu.be/CUARNcqDVoU?t=2m2s"><img src="img/youtube-favicon.png" width="16" height="16" border="0"></a> <a href='#philosophy'>Philosophy</a></li>
+
+<li><a href='#installation'>Installation</a></li>
+
+<li><a href='#create'>Reverse-engineering systems with blueprint-create</a></li>
+
+<li><a href='#inspect'>Inspecting blueprints</a></li>
+
+<li><a href='#ignore'>Ignoring particular resources</a></li>
+
+<li><a href='#rules'>Rules files and blueprint-rules</a></li>
+
+<li><a href='#diff-split-prune'>Diffing, splitting and pruning existing blueprints</a></li>
+
+<li><a href='#templates'>Rendering templates of configuration files</a></li>
+
+<li><a href='#services'>Controlling service restart conditions</a></li>
+
+<li><a class="video" title="Deployment" href="http://youtu.be/CUARNcqDVoU?t=23m56s"><img src="img/youtube-favicon.png" width="16" height="16" border="0"></a> <a href='#sh'>Generating POSIX shell scripts</a></li>
+
+<li><a href='#push-pull'>Sharing and distributing blueprints</a></li>
+
+<li><a class="video" title="Puppet-Chef" href="http://youtu.be/CUARNcqDVoU?t=25m46s"><img src="img/youtube-favicon.png" width="16" height="16" border="0"></a> <a href='#puppet-chef'>Generating Puppet modules and Chef cookbooks</a></li>
+
+<li><a class="video" title="AWS" href="http://youtu.be/CUARNcqDVoU?t=28m43s"><img src="img/youtube-favicon.png" width="16" height="16" border="0"></a> <a href='#cloudformation'>Integrating with AWS CloudFormation</a></li>
+
+<li><a href='#deploy'>Deploying your application with Blueprint</a></li>
+
+<li><a href='#git'>Local Git repository</a></li>
+
+<li><a href='#server'>Running your own Blueprint Server</a></li>
+
+<li><a href='#protocols'>Blueprint Server Protocols</a></li>
+
+<li><a href='#endpoints'>Blueprint Server Endpoints</a></li>
+
+<li><a href='#contributing'>Contributing to Blueprint</a></li>
+
+<li><a href='#alternatives'>Alternatives to Blueprint</a></li>
+</ol>
+<h2 id='apis'>APIs</h2>
+
+<ul>
+<li><a href='#protocols'>Blueprint Server Protocols</a></li>
+
+<li><a href='#endpoints'>Blueprint Server Endpoints</a></li>
+</ul>
+
+</div></div>
+<div id="man-switch">MAN
+<div id="man-panel">
+<h2 id='man'>Manuals</h2>
+<ul>
+<li><a href='http://devstructure.github.com/blueprint/blueprint-list.1.html'><code>blueprint-list</code>(1)</a>: list all blueprints.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprint-create.1.html'><code>blueprint-create</code>(1)</a>: create a blueprint.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprint-rules.1.html'><code>blueprint-rules</code>(1)</a>: create a blueprint from a blueprint-rules file.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprint-show.1.html'><code>blueprint-show</code>(1)</a>: generate code from a blueprint.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprint-diff.1.html'><code>blueprint-diff</code>(1)</a>: save the difference between two blueprints.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprint-split.1.html'><code>blueprint-split</code>(1)</a>: split one blueprint into two others interactively.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprint-prune.1.html'><code>blueprint-prune</code>(1)</a>: select a subset of resources interactively.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprint-template.1.html'><code>blueprint-template</code>(1)</a>: render mustache.sh templates locally.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprint-apply.1.html'><code>blueprint-apply</code>(1)</a>: run a blueprint&#8217;s generated shell code.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprint-push.1.html'><code>blueprint-push</code>(1)</a>: push a blueprint to the Internet.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprint-pull.1.html'><code>blueprint-pull</code>(1)</a>: pull a blueprint from the Internet.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprint-destroy.1.html'><code>blueprint-destroy</code>(1)</a>: destroy a blueprint.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprint.5.html'><code>blueprint</code>(5)</a>: Blueprint JSON format.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprintignore.5.html'><code>blueprintignore</code>(5)</a>: ignore specific files when creating blueprints.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprint-rules.5.html'><code>blueprint-rules</code>(5)</a>: enumerate resources in blueprints.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprint.cfg.5.html'><code>blueprint.cfg</code>(5)</a>: centralized blueprint service configuration.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprint-template.5.html'><code>blueprint-template</code>(5)</a>: <code>mustache.sh</code> template language syntax.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprint-template.7.html'><code>blueprint-template</code>(7)</a>: built-in template data.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprint.7.html'><code>blueprint</code>(7)</a>: Blueprint Python library.</li>
+<!-- </ul>
+
+<h3 id='plumbing'>Plumbing</h3>
+
+<ul>-->
+<li><a href='http://devstructure.github.com/blueprint/blueprint-git.1.html'><code>blueprint-git</code>(1)</a>: low-level access to blueprints.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprint-show-files.1.html'><code>blueprint-show-files</code>(1)</a>: show files in a blueprint.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprint-show-ignore.1.html'><code>blueprint-show-ignore</code>(1)</a>: show <code>blueprintignore</code>(5) rules from a blueprint.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprint-show-packages.1.html'><code>blueprint-show-packages</code>(1)</a>: show packages in a blueprint.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprint-show-services.1.html'><code>blueprint-show-services</code>(1)</a>: show services in a blueprint.</li>
+
+<li><a href='http://devstructure.github.com/blueprint/blueprint-show-sources.1.html'><code>blueprint-show-sources</code>(1)</a>: show source tarballs in a blueprint.</li>
+</ul>
+
+
+</div></div>
+<h1 id='philosophy'>Philosophy</h1>
+<p>Blueprint was born out of frustration with development environments, deployment processes, and the complexity of configuration management systems.</p>
+
+<p>Blueprint insists development environments realistically model production and that starts with using Linux. Blueprint only works on Debian- or Red Hat-based Linux systems. We recommend VirtualBox, Vagrant, Rackspace Cloud, or AWS EC2 for development systems that use the same operating system (and version) as is used in production.</p>
+
+<p>On top of the operating system, we recommend using the same web servers, databases, message queue brokers, and other software in development and production. This brings development visibility to entire classes of bugs that only occur due to interactions between production components.</p>
+
+<p>When development and production share the same operating system and software stack, they also share the same interactive management tools, meaning developers and operators alike don&#8217;t need to maintain two vocabularies. Well-understood tools like <code>apt-get</code>/<code>dpkg</code>, <code>yum</code>/<code>rpm</code>, and the whole collection of Linux system tools are available everywhere. Blueprint is unique relative to other configuration management in encouraging use of these tools.</p>
+
+<p>What&#8217;s common to all configuration management tools is the desire to manage the whole stack: from the operating system packages and services through language-specific packages, all the way to your applications. We need to span all of these across all our systems. To pick on RubyGems arbitrarily: RubyGems is purposely ignorant of its relationship to the underlying system, favoring compatibility with Windows and a wide variety of UNIX-like operating systems. Blueprint understands the macro-dependencies between RubyGems itself and the underlying system and is able to predictably reinstall a selection of gems on top of a properly configured operating system.</p>
+
+<p>When constructing this predictable order-of-operations used to reinstall files, packages, services, and source installations, Blueprint, along with other configuration management tools, takes great care in performing idempotent actions. Thus Blueprint prefers to manage the entire contents of a file rather than a diff or a line to append. Idempotency means you can apply a blueprint over and over again with confidence that nothing will change if nothing needs to change.</p>
+
+<p>Because Blueprint can reverse-engineer systems, it is of particular use migrating legacy systems into configuration management. It doesn&#8217;t matter when you install Blueprint: changes made to the system even before Blueprint is installed will be taken into account.</p>
+<hr /><h1 id='installation'>Installation</h1>
+<p>Prerequisites:</p>
+
+<ul>
+<li>Debian- or RPM-based Linux</li>
+
+<li>Python &gt;= 2.6</li>
+
+<li>Git &gt;= 1.7 (not just for installation from source)</li>
+</ul>
+
+<h2 id='from_devstructures_debian_archive'>From DevStructure&#8217;s Debian archive</h2>
+
+<pre class="prettyprint"><code>echo &quot;deb http://packages.devstructure.com $(lsb_release -sc) main&quot; | sudo tee /etc/apt/sources.list.d/devstructure.list
+sudo wget -O /etc/apt/trusted.gpg.d/devstructure.gpg http://packages.devstructure.com/keyring.gpg
+sudo apt-get update
+sudo apt-get -y install blueprint</code></pre>
+
+<h2 id='from_pypi'>From PyPI</h2>
+
+<pre class="prettyprint"><code>pip install blueprint</code></pre>
+
+<p>Make sure <code>pip</code> is using Python &gt;= 2.6, otherwise the installation will succeed but Blueprint will not run.</p>
+
+<h2 id='from_source_on_debian_ubuntu_fedora_centos_6_and_rhel_6'>From source on Debian, Ubuntu, Fedora, CentOS 6, and RHEL 6</h2>
+
+<pre class="prettyprint"><code>git clone git://github.com/devstructure/blueprint.git
+cd blueprint
+git submodule update --init
+make &amp;&amp; sudo make install</code></pre>
+
+<h2 id='from_source_on_centos_5_and_rhel_5'>From source on CentOS 5 and RHEL 5</h2>
+
+<pre class="prettyprint"><code>rpm -Uvh http://download.fedora.redhat.com/pub/epel/5/i386/epel-release-5-4.noarch.rpm
+yum install python26
+git clone git://github.com/devstructure/blueprint.git
+cd blueprint
+git submodule update --init
+make &amp;&amp; sudo make install PYTHON=/usr/bin/python26</code></pre>
+
+<p>This installs Python 2.6 from EPEL side-by-side with Python 2.4 and so won&#8217;t break Yum.</p>
+<hr /><h1 id='create'>Reverse-engineering systems with blueprint-create</h1>
+<p>By now you&#8217;ve hopefully created a development environment running the same operating system (and version) that you use in production and installed your production stack. If this is your first time configuring production databases and web servers, don&#8217;t be shy about copying-and-pasting from the guy at the next desk or a staging or production system (perhaps even multiple systems).</p>
+
+<p>Once Blueprint itself is installed you can reverse-engineer your development system with a single command.</p>
+<pre class="prettyprint"><code>blueprint create <em>name</em></code></pre>
+<p>Blueprint will list packages managed by APT, Yum, RubyGems, Python&#8217;s <code>easy_install</code> and <code>pip</code>, PHP&#8217;s PEAR and PECL, and Node.js&#8217; NPM. It will also determine which configuration files in <code>/etc</code> have been added or modified from their packaged versions and collect files in <code>/usr/local</code> that are part of any software packages installed from source (typically via GNU <code>make</code>(1)). Finally, it will build a list of conditions under which System V init or Upstart services should be restarted, including package upgrades and configuration changes.</p>
+
+<p>All of this information is encoded in a <code>blueprint</code>(5) JSON document and zero or more <code>tar</code>(5) archives and stored in a branch called <em>name</em> in the local Git repository <code>~/.blueprints.git</code>.</p>
+
+<p>Any blueprint in the local Git repository may be applied to the system with <code>blueprint-apply</code>(1):</p>
+<pre class="prettyprint"><code>blueprint apply <em>name</em></code></pre>
+<h2 id='example'>Example</h2>
+
+<p>Suppose you want to install a basic Ruby stack for running a Sinatra application called <code>example</code> proxied by Nginx on Debian-based Linux. Install the prerequisite packages:</p>
+
+<pre class="prettyprint"><code>sudo apt-get install build-essential nginx-light ruby ruby-dev rubygems
+sudo gem install sinatra unicorn</code></pre>
+
+<p>Configure Nginx in <code>/etc/nginx/sites-available/example</code>:</p>
+
+<pre class="prettyprint"><code>server {
+    listen 80 default;
+    location /static { root /usr/local/share/rack/example/static; }
+    location / { proxy_pass http://127.0.0.1:8080; }
+}</code></pre>
+
+<p>Enable the Nginx configuration:</p>
+
+<pre class="prettyprint"><code>ln -s /etc/nginx/sites-{available,enabled}/example</code></pre>
+
+<p>Create the application itself. <code>/usr/local/share/rack/example/app.rb</code>:</p>
+
+<pre class="prettyprint"><code>require &#39;sinatra&#39;
+get &#39;/hi&#39; do
+  &quot;Hello, world!\n&quot;
+end</code></pre>
+
+<p><code>/usr/local/share/rack/example/config.ru</code>:</p>
+
+<pre class="prettyprint"><code>require &#39;app&#39;
+run Sinatra::Application</code></pre>
+
+<p>Configure Unicorn in <code>/etc/unicorn.conf.rb</code>:</p>
+
+<pre class="prettyprint"><code>worker_processes 4</code></pre>
+
+<p>Configure Upstart to run the application:</p>
+
+<pre class="prettyprint"><code>description &quot;Example&quot;
+start on runlevel [2345]
+stop on runlevel [!2345]
+respawn
+chdir /usr/local/share/rack/example
+exec unicorn -c /etc/unicorn.conf.rb</code></pre>
+
+<p>Now create a blueprint and call it <em>example</em>.</p>
+
+<pre class="prettyprint"><code>sudo blueprint create example</code></pre>
+
+<p>We&#8217;ll pick this example up in the next chapter.</p>
+<hr /><h1 id='inspect'>Inspecting blueprints</h1>
+<p>Once a blueprint has been created and stored in the local Git repository, it&#8217;s easy to inspect what&#8217;s been included both in its raw JSON form and in more friendly formats.</p>
+
+<p>First, print the entire <code>blueprint</code>(5) JSON document:</p>
+<pre class="prettyprint"><code>blueprint show <em>name</em> | less</code></pre>
+<p>The output of <code>blueprint-show</code>(1) can be a bit overwhelming, which is one of the reasons the following four commands were created.</p>
+
+<p><code>blueprint-show-files</code>(1) lists the pathname of each file included in the blueprint on its own line.</p>
+<pre class="prettyprint"><code><em>pathname</em></code></pre>
+<p><code>blueprint-show-packages</code>(1) lists the manager (&#8221;<code>apt</code>&#8221;, &#8221;<code>yum</code>&#8221;, &#8221;<code>rubygems1.8</code>&#8221;, etc.), name, and version number for each package included in the blueprint on its own line. If two versions of the same package are included (as is possibly with RubyGems and some other package managers), each will be printed on its own line.</p>
+<pre class="prettyprint"><code><em>manager</em> <em>package</em> <em>version</em></code></pre>
+<p><code>blueprint-show-services</code>(1) lists the manager (&#8221;<code>sysvinit</code>&#8221; or &#8221;<code>upstart</code>&#8221;) and name of each service included in the blueprint on its own line.</p>
+<pre class="prettyprint"><code><em>manager</em> <em>service</em></code></pre>
+<p><code>blueprint-show-sources</code>(1) lists the source installations included in the blueprint. The root directory (for example, &#8221;<code>/usr/local</code>&#8221;) and tarball filename are printed to standard error and the contents of the tarball are printed to standard output via <code>tar</code>(1)&#8217;s <code>tv</code> options.</p>
+<pre class="prettyprint"><code><em>dirname</em> <em>filename</em><br /><em>`tar tv` output</em></code></pre>
+<h2 id='example'>Example</h2>
+
+<p><code>blueprint show-files example</code></p>
+
+<pre class="prettyprint"><code>/etc/apt/sources.list
+/etc/hosts
+/etc/init/example.conf
+/etc/mysql/debian.cnf
+/etc/nginx/sites-available/example
+/etc/nginx/sites-enabled/default
+/etc/nginx/sites-enabled/example
+/etc/unicorn.conf.rb</code></pre>
+
+<p><code>blueprint show-packages example</code></p>
+
+<pre class="prettyprint"><code>apt binutils 2.21.53.20110810-0ubuntu3
+apt blueprint 3.4.0-1py2.7
+apt build-essential 11.5ubuntu1
+apt ca-certificates 20110502+nmu1ubuntu5
+apt cpp 4:4.6.1-2ubuntu5
+apt cpp-4.6 4.6.1-9ubuntu3
+apt curl 7.21.6-3ubuntu3
+apt dpkg-dev 1.16.0.3ubuntu5
+apt fakeroot 1.17-1
+apt g++ 4:4.6.1-2ubuntu5
+apt g++-4.6 4.6.1-9ubuntu3
+apt gcc 4:4.6.1-2ubuntu5
+apt gcc-4.6 4.6.1-9ubuntu3
+apt git 1:1.7.5.4-1
+apt git-core 1:1.7.5.4-1
+apt git-man 1:1.7.5.4-1
+apt libalgorithm-diff-perl 1.19.02-2
+apt libalgorithm-diff-xs-perl 0.04-1build1
+apt libalgorithm-merge-perl 0.08-2
+apt libc-dev-bin 2.13-20ubuntu5
+apt libc6-dev 2.13-20ubuntu5
+apt libcurl3 7.21.6-3ubuntu3
+apt libcurl3-gnutls 7.21.6-3ubuntu3
+apt libdbd-mysql-perl 4.019-1
+apt libdbi-perl 1.616-1build1
+apt libdpkg-perl 1.16.0.3ubuntu5
+apt liberror-perl 0.17-1
+apt libgmp10 2:5.0.1+dfsg-7ubuntu2
+apt libgomp1 4.6.1-9ubuntu3
+apt libhtml-template-perl 2.10-1
+apt libmpc2 0.9-3
+apt libmpfr4 3.0.1-5
+apt libmysqlclient16 5.1.58-1ubuntu1
+apt libnet-daemon-perl 0.48-1
+apt libplrpc-perl 0.2020-2
+apt libquadmath0 4.6.1-9ubuntu3
+apt libreadline5 5.2-9ubuntu1
+apt librtmp0 2.3-2ubuntu1
+apt libruby1.8 1.8.7.352-2
+apt libstdc++6-4.6-dev 4.6.1-9ubuntu3
+apt libtimedate-perl 1.2000-1
+apt libwrap0 7.6.q-21
+apt linux-libc-dev 3.0.0-12.20
+apt manpages-dev 3.27-1ubuntu2
+apt mysql-client-5.1 5.1.58-1ubuntu1
+apt mysql-client-core-5.1 5.1.58-1ubuntu1
+apt mysql-common 5.1.58-1ubuntu1
+apt mysql-server 5.1.58-1ubuntu1
+apt mysql-server-5.1 5.1.58-1ubuntu1
+apt mysql-server-core-5.1 5.1.58-1ubuntu1
+apt nginx-common 1.0.5-1
+apt nginx-light 1.0.5-1
+apt openssh-server 1:5.8p1-7ubuntu1
+apt openssl 1.0.0e-2ubuntu4
+apt python-pip 1.0-1
+apt python-pkg-resources 0.6.16-1
+apt python-setuptools 0.6.16-1
+apt rsync 3.0.8-1ubuntu1
+apt ruby 4.8
+apt ruby-dev 4.8
+apt ruby1.8 1.8.7.352-2
+apt ruby1.8-dev 1.8.7.352-2
+apt rubygems 1.7.2-1
+apt tmux 1.5-1
+python-pip Django 1.3.1
+rubygems fpm 0.3.11
+rubygems hpricot 0.8.5
+rubygems json 1.6.3
+rubygems kgio 2.6.0
+rubygems mustache 0.99.4
+rubygems rack 1.3.5
+rubygems rack-protection 1.1.4
+rubygems raindrops 0.8.0
+rubygems rdiscount 1.6.8
+rubygems sinatra 1.3.1
+rubygems tilt 1.3.3
+rubygems unicorn 4.1.1</code></pre>
+
+<p><code>blueprint show-services example</code></p>
+
+<pre class="prettyprint"><code>sysvinit nginx
+sysvinit ssh
+upstart example
+upstart mysql</code></pre>
+
+<p><code>blueprint show-sources example</code></p>
+
+<pre class="prettyprint"><code>/usr/local 82789250f3ad94d4cfeacc0a8cabae2d26b0270e.tar
+drwxr-xr-x root/root         0 2011-11-29 21:42 ./
+drwxr-xr-x root/root         0 2011-11-29 20:50 ./share/
+drwxr-xr-x root/root         0 2011-11-29 21:55 ./share/rack/
+drwxr-xr-x rcrowley/rcrowley 0 2011-12-09 15:12 ./share/rack/example/
+-rw-rw-r-- rcrowley/rcrowley 55 2011-11-29 21:02 ./share/rack/example/app.rb
+-rw-rw-r-- rcrowley/rcrowley 39 2011-11-29 20:54 ./share/rack/example/config.ru</code></pre>
+
+<p>We&#8217;re off to a great start but there are some extraneous files and packages here that need cleaning up.</p>
+<hr /><h1 id='ignore'>Ignoring particular resources</h1>
+<p>Rather than requiring you enumerate every detail of your infrastructure in code, Blueprint reverse-engineers most of these details from running systems. There are times, though, when it&#8217;s a bit too verbose.</p>
+
+<p>Inspired by similar features in version control software, Blueprint allows you to enumerate files, packages, services, and sources that should be ignored in a file format inspired by <code>gitignore</code>(5). See <code>blueprintignore</code>(5) for details.</p>
+
+<p>Blueprint looks for these rules in <code>/etc/blueprintignore</code> and <code>~/.blueprintignore</code>. Rules in <code>/etc/blueprintignore</code> will be included in the blueprint itself, thereby propagating to other users of the blueprint. Rules in <code>~/.blueprintignore</code> will remain local though each revision of a blueprint will store the full set of rules used to create it.</p>
+
+<p>Files may be specified by fully-qualified or relative pathnames, possibly including glob syntax:</p>
+
+<pre class="prettyprint"><code>/etc/foo
+foo/*
+*.foo
+[abc]/[xyz]</code></pre>
+
+<p>Packages must be specified by their manager and name, prefixed with <code>:package:</code>:</p>
+
+<pre class="prettyprint"><code>:package:apt/build-essential</code></pre>
+
+<p>When a package is ignored, packages on which it depends are also ignored.</p>
+
+<p>Services must be specified by their manager and name, prefixed with <code>:service:</code>:</p>
+
+<pre class="prettyprint"><code>:service:sysvinit/ssh</code></pre>
+
+<p>Sources must be specified by fully-qualified pathnames:</p>
+
+<pre class="prettyprint"><code>:sources:/usr/local</code></pre>
+
+<p>You can ignore and unignore particular files within a source directory to fine-tune what&#8217;s included in the tarball.</p>
+
+<p>Any rule may be negated by prefixing it with a <code>!</code>, which overrides defaults and well as previous matching rules - the last matching rule wins.</p>
+
+<h2 id='example'>Example</h2>
+
+<p><code>/etc/apt/sources.list</code> and <code>/etc/hosts</code> really don&#8217;t belong in the blueprint since they&#8217;re part of the operating system and we haven&#8217;t customized them. Add their pathnames to <code>/etc/blueprintignore</code>:</p>
+
+<pre class="prettyprint"><code>/etc/apt/sources.list
+/etc/hosts</code></pre>
+
+<p><code>/etc/mysql/debian.cnf</code> is generated by the MySQL server package in its <code>postinst</code> maintainer script. Add its pathname to <code>/etc/blueprintignore</code>:</p>
+
+<pre class="prettyprint"><code>/etc/mysql/debian.cnf</code></pre>
+
+<p><code>/etc/nginx/sites-enabled/default</code> is part of the basic Nginx installation and again we don&#8217;t particularly care about it. Add its pathname to <code>/etc/blueprintignore</code>:</p>
+
+<pre class="prettyprint"><code>/etc/nginx/sites-enabled/default</code></pre>
+
+<p><code>build-essential</code> brought a lot of friends along that are clouding what&#8217;s really important in this blueprint. Recall that ignoring a package also ignores its dependencies. The opposite is not true: unignoring a package leaves its dependencies alone. Ignoring and immediately unignoring <code>build-essential</code>, <code>ruby</code>, and <code>ruby-dev</code> will slim down the blueprint without any loss in completeness.</p>
+
+<pre class="prettyprint"><code>:package:apt/build-essential
+!:package:apt/build-essential
+:package:apt/ruby
+!:package:apt/ruby
+:package:apt/ruby-dev
+!:package:apt/ruby-dev</code></pre>
+
+<p>Running <code>sudo blueprint create example</code> again will commit a new blueprint that takes these rules into account.</p>
+<hr /><h1 id='rules'>Rules files and blueprint-rules</h1>
+<p>As complexity grows, you&#8217;re likely to pass an inflection point when it becomes easier to enumerate the resources you care about, not the resources that should be ignored. When the time comes, Blueprint is ready. The rules syntax used to ignore particular resources can be turned around and used to enumerate the resources to include in the blueprint. See <code>blueprint-rules</code>(5) for details.</p>
+
+<p>The <code>blueprint-rules</code>(1) command reverse-engineers the system just like <code>blueprint-create</code> but limits the resources included in the blueprint to those in the rules file.</p>
+<pre class="prettyprint"><code>blueprint rules <em>pathname</em></code></pre>
+<p>The rules files are a bit of a hybrid between the traditional Blueprint approach of reverse-engineering and the typical configuration-as-code approach of other configuration management tools.</p>
+
+<h2 id='example'>Example</h2>
+
+<p>Add these rules to <code>example.blueprint-rules</code>:</p>
+
+<pre class="prettyprint"><code>:source:/usr/local
+/etc/init/example.conf
+/etc/nginx/sites-*/example
+:package:apt/libmysqlclient-dev
+:package:apt/mysql-client-5.1
+:package:apt/nginx-common
+:package:apt/nginx-light
+:package:apt/ruby-dev
+:package:apt/rubygems
+:package:rubygems/*
+:service:sysvinit/nginx
+:service:upstart/example</code></pre>
+
+<p>Now create the blueprint <code>example</code>:</p>
+
+<pre class="prettyprint"><code>blueprint rules example.blueprint-rules</code></pre>
+
+<p>As usual, the blueprint is stored locally in Git, ready for action.</p>
+
+<p>A good exercise for the reader is creation of a separate blueprint for the MySQL server and its configuration. It&#8217;s installed alongside the web stack in development but that&#8217;s unlikely to be the case in production, so having two blueprints could be advantageous. The next chapter introduces another way to create two blueprints from one system.</p>
+<hr /><h1 id='diff-split-prune'>Diffing, splitting and pruning existing blueprints</h1>
+<p>Refactoring is a major part of software development practice and configuration management shouldn&#8217;t be left out in the cold. Blueprint provides several tools that can be used to refactor your blueprints into more modular, maintainable, focused artifacts.</p>
+
+<p><code>blueprint-diff</code>(1) takes direct advantage of the subtraction operator available on <code>Blueprint</code> objects in the underlying library.</p>
+<pre class="prettyprint"><code>blueprint diff <em>minuend</em> <em>subtrahend</em> <em>difference</em></code></pre>
+<p>Resources that appear in <em>minuend</em> but not <em>subtrahend</em> will be included in <em>difference</em> and committed to the local Git repository under that name.</p>
+
+<p><code>blueprint-split</code>(1) and <code>blueprint-prune</code>(1) are interactive refactoring tools.</p>
+
+<p><code>blueprint-split</code> prints each resource in <em>src</em> and prompts you for a choice of <em>dest-a</em> or <em>dest-b</em>. The resulting <em>dest-a</em> and <em>dest-b</em> blueprints are committed to the local Git repository.</p>
+<pre class="prettyprint"><code>blueprint split <em>src</em> <em>dest-a</em> <em>dest-b</em></code></pre>
+<p><code>blueprint-prune</code> instead prompts you to include or ignore each resource in <em>src</em> in <em>dest</em>.</p>
+<pre class="prettyprint"><code>blueprint prune <em>src</em> <em>dest</em></code></pre>
+<p>There are some limitations in both of these tools, however. You can&#8217;t currently split the files within a source tarball. The best workaround is to use rules files to create blueprints that contain only the files you want.</p>
+
+<h2 id='example'>Example</h2>
+
+<p><code>blueprint prune example example-nginx</code></p>
+
+<pre class="prettyprint"><code>/usr/local 6326b42413443bc2d94e13747d05f650b873a53e.tar
+Include in blueprint example-nginx? [y/n] n
+/etc/init/example.conf
+Include in blueprint example-nginx? [y/n] n
+/etc/nginx/sites-available/example
+Include in blueprint example-nginx? [y/n] y
+/etc/nginx/sites-enabled/example
+Include in blueprint example-nginx? [y/n] y
+apt nginx-common 1.0.5-1
+Include in blueprint example-nginx? [y/n] y
+apt nginx-light 1.0.5-1
+Include in blueprint example-nginx? [y/n] y
+apt ruby-dev 4.8
+Include in blueprint example-nginx? [y/n] n
+apt rubygems 1.7.2-1
+Include in blueprint example-nginx? [y/n] n
+rubygems fpm 0.3.11
+Include in blueprint example-nginx? [y/n] n
+rubygems hpricot 0.8.5
+Include in blueprint example-nginx? [y/n] n
+rubygems json 1.6.3
+Include in blueprint example-nginx? [y/n] n
+rubygems kgio 2.6.0
+Include in blueprint example-nginx? [y/n] n
+rubygems mustache 0.99.4
+Include in blueprint example-nginx? [y/n] n
+rubygems rack 1.3.5
+Include in blueprint example-nginx? [y/n] n
+rubygems rack-protection 1.1.4
+Include in blueprint example-nginx? [y/n] n
+rubygems raindrops 0.8.0
+Include in blueprint example-nginx? [y/n] n
+rubygems rdiscount 1.6.8
+Include in blueprint example-nginx? [y/n] n
+rubygems sinatra 1.3.1
+Include in blueprint example-nginx? [y/n] n
+rubygems tilt 1.3.3
+Include in blueprint example-nginx? [y/n] n
+rubygems unicorn 4.1.1
+Include in blueprint example-nginx? [y/n] n
+sysvinit nginx
+Include in blueprint example-nginx? [y/n] y
+upstart example
+Include in blueprint example-nginx? [y/n] n</code></pre>
+
+<p>The same could have been done with <code>blueprint-split</code> to create <code>example-nginx</code> and <code>example-mysql</code> or <code>base</code> and <code>custom</code> &#8212; any distinction you desire.</p>
+<hr /><h1 id='templates'>Rendering templates of configuration files</h1>
+<p>Not all systems are created equal. Certainly your <code>m2.4xlarge</code> AWS EC2 instance packs a bit more CPU than a virtual machine running in a corner of your laptop and your configurations should be able to cope with these operational extremes.</p>
+
+<p>Blueprint allows configuration files (found in <code>/etc</code>) to be specified as templates and (optionally) data rather than static content. These templates are rendered by a special portable dialect of the <code>mustache</code>(5) template language called <code>mustache.sh</code>. See <code>blueprint-template</code>(5) for details.</p>
+
+<p>In their simplest form, these templates allow substitution of system parameters.</p>
+<pre class="prettyprint"><code>&#123;&#123;<em>FOO</em>&#125;&#125;</code></pre>
+<p>You can also substitute the output of a shell command.</p>
+<pre class="prettyprint"><code>&#123;&#123;`<em>echo foo</em>`&#125;&#125;</code></pre>
+<p>More complex uses can iterate over the lines of output from a shell command.</p>
+<pre class="prettyprint"><code>&#123;&#123;#`<em>echo foo; echo bar; echo baz</em>`&#125;&#125;<br />&#123;&#123;_M_LINE&#125;&#125;<br />&#123;&#123;/`<em>echo foo; echo bar; echo baz</em>`&#125;&#125;</code></pre>
+<p>Blueprint ships with a small helping of common system parameters:</p>
+
+<ul>
+<li><code>CORES</code>: the number of CPU cores in the system.</li>
+
+<li><code>MEM</code>: the total amount of memory in the system in bytes.</li>
+
+<li><code>FQDN</code>: the fully-qualified domain name according to <code>hostname</code>(1)&#8217;s <code>--fqdn</code> option.</li>
+
+<li><code>PRIVATE_IP</code>: the first private IPv4 address assigned to any interface.</li>
+
+<li><code>PUBLIC_IP</code>: the first public IPv4 address assigned to any interface.</li>
+</ul>
+
+<p>There are several more, documented in <code>blueprint-template</code>(7). You can provide your own global data by adding <code>source</code>-able shell scripts with the <code>.sh</code> suffix to <code>/etc/blueprint-template.d</code>.</p>
+
+<p>Any <em>pathname</em> may have an associated template, <code><em>pathname</em>.blueprint-template.mustache</code>. An additional <code>source</code>-able shell script private to just this template may be placed in <code><em>pathname</em>.blueprint-template.sh</code>.</p>
+
+<p>To render a template locally (likely during development), use <code>blueprint-template(1)</code>.</p>
+<pre class="prettyprint"><code>blueprint template <em>pathname</em></code></pre>
+<h2 id='example'>Example</h2>
+
+<p>Our Unicorn configuration statically assumes four workers is the best configuration. In reality, Unicorn workers are a function of the number of CPU cores available.</p>
+
+<p>Configure Unicorn to use one worker per CPU in <code>/etc/unicorn.conf.rb.blueprint-template.mustache</code>:</p>
+<pre class="prettyprint"><code>worker_processes &#123;&#123;CORES&#125;&#125;</code></pre>
+<p>Configure Unicorn to use four workers per CPU in <code>/etc/unicorn.conf.rb.blueprint-template.mustache</code>:</p>
+<pre class="prettyprint"><code>worker_processes &#123;&#123;`expr 4 \* $CORES`&#125;&#125;</code></pre>
+<p>Or, you can extract computation out of the template and into <code>/etc/unicorn.conf.rb.blueprint-template.sh</code>:</p>
+
+<pre class="prettyprint"><code>export WORKER_PROCESSES=&quot;$(expr 4 \* $CORES)&quot;</code></pre>
+
+<p><code>/etc/unicorn.conf.rb.blueprint-template.mustache</code> becomes:</p>
+<pre class="prettyprint"><code>worker_processes &#123;&#123;WORKER_PROCESSES&#125;&#125;</code></pre>
+<p>Now Blueprint can scale this Unicorn configuration up and down as the system allows or requires.</p>
+<hr /><h1 id='services'>Controlling service restart conditions</h1>
+<p>The last step in applying a blueprint is to restart all the services whose configuration changed. Most configuration management tools require you to connect the dots explicitly but Blueprint finds many of those relationships automatically.</p>
+
+<p>System V init and Upstart services are included in blueprints when their init script or configuration file, or the package that contains the init script or configuration file, are included in the blueprint. From there, Blueprint searches for resources that, when changed, should cause the service to restart.</p>
+
+<ul>
+<li>When the package that contains the service init script or configuration file is upgraded, the service should be restarted.</li>
+
+<li>When other files in the package that contains the service change, the service should be restarted.</li>
+
+<li>When files in directories in the package that contains the service change, the service should be restarted.</li>
+
+<li>When fully-qualified pathnames (be they files or directories) mentioned in the service init script or configuration file are changed, the service should be restarted. This accounts for both changes to individual files and changes in source tarballs.</li>
+</ul>
+
+<p>Other files may be added to the list to watch by naming them in a comment in the service init script or configuration file.</p>
+
+<h2 id='example'>Example</h2>
+
+<p>Suppose our <code>example</code> application reads <code>/etc/database.yml</code> for database connection credentials. The Unicorn application server must be restarted to read changes to this file. Mention <code>/etc/database.yml</code> in the Upstart configuration:</p>
+
+<pre class="prettyprint"><code>description &quot;Example&quot;
+start on runlevel [2345]
+stop on runlevel [!2345]
+respawn
+chdir /usr/local/share/rack/example
+exec unicorn -c /etc/unicorn.conf.rb
+# Dear Blueprint, restart me when /etc/database.yml changes.</code></pre>
+<hr /><h1 id='sh'>Generating POSIX shell scripts</h1>
+<p>Beneath the <code>blueprint-apply</code>(1) command briefly introduced before there is the <code>-S</code> option to <code>blueprint-show</code>(1) which generates a POSIX shell script that can apply a blueprint to any system.</p>
+
+<p>Dependencies are especially painful when bootstrapping new systems so Blueprint takes great pains to generate dependency-free shell scripts. They extract source tarballs, place file contents and adjust owners/groups/modes, install packages, and restart services as necessary according to the algorithm described in <code>blueprint</code>(5). Even template rendering is handled without any dependencies.</p>
+
+<p>The generated shell script for the blueprint <em>name</em> is written to a file in your working directory as <code><em>name</em>.sh</code> or <code><em>name</em>/bootstrap.sh</code> if the blueprint contains templates or source tarballs.</p>
+<pre class="prettyprint"><code>blueprint show -S <em>name</em></code></pre>
+<p>This shell script and its associated files can drive deployment, provisioning, or other development environments without even having to install Blueprint first.</p>
+
+<h2 id='example'>Example</h2>
+
+<p>Running <code>blueprint show -S example</code> creates <code>example/bootstrap.sh</code> as follows and bundles <code>mustache.sh</code> and the source tarball containing our example application. <code>example/bootstrap.sh</code>:</p>
+<pre class="prettyprint"><code>#
+# Automatically generated by blueprint(7).  Edit at your own risk.
+#
+
+set -x
+
+cd "$(dirname "$0")"
+
+mkdir -p "/etc/init"
+cat &gt;"/etc/init/example.conf" &lt;&lt;EOF
+description "Example"
+start on runlevel [2345]
+stop on runlevel [!2345]
+respawn
+chdir /usr/local/share/rack/example
+exec unicorn -c /etc/unicorn.conf.rb
+# Dear Blueprint, restart me when /etc/database.yml changes.
+EOF
+MD5SUM="$(md5sum "/etc/nginx/sites-available/example" 2&gt;/dev/null)"
+mkdir -p "/etc/nginx/sites-available"
+cat &gt;"/etc/nginx/sites-available/example" &lt;&lt;EOF
+server {
+listen 80 default;
+location /static { root /usr/local/share/rack/example/static; }
+location / { proxy_pass http://127.0.0.1:8080; }
+}
+EOF
+[ "$MD5SUM" != "$(md5sum "/etc/nginx/sites-available/example")" ] &amp;&amp; SERVICE_sysvinit_nginx=1
+MD5SUM="$(md5sum "/etc/nginx/sites-enabled/example" 2&gt;/dev/null)"
+mkdir -p "/etc/nginx/sites-enabled"
+ln -s "/etc/nginx/sites-available/example" "/etc/nginx/sites-enabled/example"
+[ "$MD5SUM" != "$(md5sum "/etc/nginx/sites-enabled/example")" ] &amp;&amp; SERVICE_sysvinit_nginx=1
+MD5SUM="$(md5sum "/etc/unicorn.conf.rb" 2&gt;/dev/null)"
+mkdir -p "/etc"
+(
+set +x
+. "lib/mustache.sh"
+for F in */blueprint-template.d/*.sh
+do
+    . "$F"
+done
+export WORKER_PROCESSES="$(expr 4 \* $CORES)"
+mustache &gt;"/etc/unicorn.conf.rb" &lt;&lt;EOF
+worker_processes &#123;&#123;WORKER_PROCESSES&#125;&#125;
+EOF
+)
+[ "$MD5SUM" != "$(md5sum "/etc/unicorn.conf.rb")" ] &amp;&amp; SERVICE_upstart_example=1
+export APT_LISTBUGS_FRONTEND="none"
+export APT_LISTCHANGES_FRONTEND="none"
+export DEBIAN_FRONTEND="noninteractive"
+apt-get -q update
+[ "$(dpkg-query -f'${Version}\n' -W mysql-client-5.1)" = "5.1.58-1ubuntu1" ] || apt-get -y -q -o DPkg::Options::=--force-confold install mysql-client-5.1=5.1.58-1ubuntu1
+[ "$(dpkg-query -f'${Version}\n' -W nginx-common)" = "1.0.5-1" ] || { apt-get -y -q -o DPkg::Options::=--force-confold install nginx-common=1.0.5-1; SERVICE_sysvinit_nginx=1; }
+[ "$(dpkg-query -f'${Version}\n' -W nginx-light)" = "1.0.5-1" ] || apt-get -y -q -o DPkg::Options::=--force-confold install nginx-light=1.0.5-1
+[ "$(dpkg-query -f'${Version}\n' -W ruby-dev)" = "4.8" ] || apt-get -y -q -o DPkg::Options::=--force-confold install ruby-dev=4.8
+[ "$(dpkg-query -f'${Version}\n' -W rubygems)" = "1.7.2-1" ] || apt-get -y -q -o DPkg::Options::=--force-confold install rubygems=1.7.2-1
+gem -i -v0.3.11 fpm &gt;/dev/null || gem install --no-rdoc --no-ri -v0.3.11 fpm
+gem -i -v0.8.5 hpricot &gt;/dev/null || gem install --no-rdoc --no-ri -v0.8.5 hpricot
+gem -i -v1.6.3 json &gt;/dev/null || gem install --no-rdoc --no-ri -v1.6.3 json
+gem -i -v2.6.0 kgio &gt;/dev/null || gem install --no-rdoc --no-ri -v2.6.0 kgio
+gem -i -v0.99.4 mustache &gt;/dev/null || gem install --no-rdoc --no-ri -v0.99.4 mustache
+gem -i -v1.3.5 rack &gt;/dev/null || gem install --no-rdoc --no-ri -v1.3.5 rack
+gem -i -v1.1.4 rack-protection &gt;/dev/null || gem install --no-rdoc --no-ri -v1.1.4 rack-protection
+gem -i -v0.8.0 raindrops &gt;/dev/null || gem install --no-rdoc --no-ri -v0.8.0 raindrops
+gem -i -v1.6.8 rdiscount &gt;/dev/null || gem install --no-rdoc --no-ri -v1.6.8 rdiscount
+gem -i -v1.3.1 sinatra &gt;/dev/null || gem install --no-rdoc --no-ri -v1.3.1 sinatra
+gem -i -v1.3.3 tilt &gt;/dev/null || gem install --no-rdoc --no-ri -v1.3.3 tilt
+gem -i -v4.1.1 unicorn &gt;/dev/null || gem install --no-rdoc --no-ri -v4.1.1 unicorn
+[ -n "$SERVICE_sysvinit_nginx" ] &amp;&amp; /etc/init.d/nginx restart
+[ -n "$SERVICE_upstart_example" ] &amp;&amp; { restart example || start example; }</code></pre><hr /><h1 id='push-pull'>Sharing and distributing blueprints</h1>
+<p><strong>DevStructure runs a free Blueprint Server at <code>devstructure.com</code> but this service will not be available after June 30<sup>th</sup>, 2012.</strong> Learn more about <a href='#server'>running your own Blueprint Server</a></p>
+
+<p>We at DevStructure saw the workflow unfolding around these generated shell scripts and in them an opportunity for a macro don&#8217;t-repeat-yourself optimization. Thus were born <code>blueprint-push</code>(1) and <code>blueprint-pull</code>(1).</p>
+
+<p>If you decide to <a href='#server'>run your own Blueprint Server</a>, you&#8217;ll need to configure a <code>server</code> ahead of time in <code>/etc/blueprint.cfg</code>:</p>
+<pre class="prettyprint"><code>[io]
+server = <em>server</em></code></pre>
+<p><code>blueprint-push</code> uploads the JSON document and all source tarballs referenced by a blueprint to a Blueprint Server, which stores them behind a long secret key in AWS S3. The URL that may be used to pull the blueprint later is printed to standard output.</p>
+<pre class="prettyprint"><code>blueprint push <em>name</em></code></pre>
+<p>The first time you run this command it will prompt you with the contents of <code>/etc/blueprint.cfg</code> which you can optionally put in place. If you do, Blueprint will reuse the same secret the next time <code>blueprint-push</code> is called. Configuring a secret this way allows you to push revisions to your blueprints which can then be pulled from a known location.</p>
+
+<p><code>blueprint-pull</code> downloads the JSON document and all source tarballs referenced by a blueprint that has been pushed and stores them in the local Git repository. Typically, it accepts the URL printed by <code>blueprint-push</code> but if you configure a default secret in <code>/etc/blueprint.cfg</code>, you can pull blueprints by only their name.</p>
+<pre class="prettyprint"><code>blueprint pull <em>url</em></code></pre><pre class="prettyprint"><code>blueprint pull <em>name</em></code></pre>
+<p>Just as <code>blueprint-show</code>&#8217;s <code>-S</code> option helps bootstrap systems with zero dependencies, <code>devstructure.com</code> can generate shell scripts remotely so Blueprint doesn&#8217;t have to be installed ahead of time. You can bootstrap a new system from a pushed blueprint in one command:</p>
+<pre class="prettyprint"><code>curl https://devstructure.com/<em>secret</em>/<em>name</em>/<em>name</em>.sh | sh</code></pre>
+<h2 id='example'>Example</h2>
+
+<p>Push the <em>example</em> blueprint to <code>devstructure.com</code>:</p>
+
+<pre class="prettyprint"><code>blueprint push example</code></pre>
+
+<p>Now configure a production system to apply the latest revision to <em>example</em> every half hour (this behavior should be familiar to Puppet and Chef users). In <code>root</code>&#8217;s crontab:</p>
+
+<pre class="prettyprint"><code>*/30 * * * * curl https://devstructure.com/0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_-/example/example.sh | sh</code></pre>
+<hr /><h1 id='puppet-chef'>Generating Puppet modules and Chef cookbooks</h1>
+<p>Blueprint can also streamline the development workflow in Puppet- or Chef-managed environments by generating complete Puppet modules or Chef cookbooks.</p>
+
+<p>Generate a Puppet module in <code><em>name</em>/manifests/init.pp</code>:</p>
+<pre class="prettyprint"><code>blueprint show -P <em>name</em></code></pre>
+<p>Generate a Chef cookbook in <code><em>name</em>/recipes/default.rb</code>:</p>
+<pre class="prettyprint"><code>blueprint show -C <em>name</em></code></pre>
+<p>These modules and cookbooks may be included directly in any Puppet or Chef environment or be used as the starting point for further development &#8212; the code is formatted according to the style guidelines of the respective communities.</p>
+
+<p>Note, however, that the file templates used by Blueprint are incompatible with Puppet and Chef and so can&#8217;t be included in the generated modules and cookbooks.</p>
+
+<h2 id='example'>Example</h2>
+
+<p>Running <code>blueprint show -P example</code> creates <code>example/manifests/init.pp</code> as follows and bundles the source tarball containing our example application. <code>example/manifests/init.pp</code>:</p>
+
+<pre class="prettyprint"><code>#
+# Automatically generated by blueprint(7).  Edit at your own risk.
+#
+class example {
+    Exec {
+        path =&gt; &#39;/home/rcrowley/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games&#39;,
+    }
+    Class[&#39;sources&#39;] -&gt; Class[&#39;files&#39;] -&gt; Class[&#39;packages&#39;]
+    class files {
+        file {
+            &#39;/etc&#39;:
+                ensure =&gt; directory;
+            &#39;/etc/init&#39;:
+                ensure =&gt; directory;
+            &#39;/etc/init/example.conf&#39;:
+                content =&gt; template(&#39;example/etc/init/example.conf&#39;),
+                ensure  =&gt; file,
+                group   =&gt; root,
+                mode    =&gt; 0644,
+                owner   =&gt; root;
+            &#39;/etc/nginx&#39;:
+                ensure =&gt; directory;
+            &#39;/etc/nginx/sites-available&#39;:
+                ensure =&gt; directory;
+            &#39;/etc/nginx/sites-available/example&#39;:
+                content =&gt; template(&#39;example/etc/nginx/sites-available/example&#39;),
+                ensure  =&gt; file,
+                group   =&gt; root,
+                mode    =&gt; 0644,
+                owner   =&gt; root;
+            &#39;/etc/nginx/sites-enabled&#39;:
+                ensure =&gt; directory;
+            &#39;/etc/nginx/sites-enabled/example&#39;:
+                ensure =&gt; &#39;/etc/nginx/sites-available/example&#39;,
+                group  =&gt; root,
+                owner  =&gt; root;
+            &#39;/etc/unicorn.conf.rb&#39;:
+                content =&gt; template(&#39;example/etc/unicorn.conf.rb&#39;),
+                ensure  =&gt; file,
+                group   =&gt; root,
+                mode    =&gt; 0644,
+                owner   =&gt; root;
+        }
+    }
+    include files
+    class packages {
+        Class[&#39;apt&#39;] -&gt; Class[&#39;rubygems&#39;]
+        exec { &#39;apt-get -q update&#39;:
+            before =&gt; Class[&#39;apt&#39;],
+        }
+        class apt {
+            package {
+                &#39;mysql-client-5.1&#39;:
+                    ensure =&gt; &#39;5.1.58-1ubuntu1&#39;;
+                &#39;nginx-common&#39;:
+                    ensure =&gt; &#39;1.0.5-1&#39;;
+                &#39;nginx-light&#39;:
+                    ensure =&gt; &#39;1.0.5-1&#39;;
+                &#39;ruby-dev&#39;:
+                    ensure =&gt; &#39;4.8&#39;;
+                &#39;rubygems&#39;:
+                    ensure =&gt; &#39;1.7.2-1&#39;;
+            }
+        }
+        include apt
+        class rubygems {
+            package {
+                &#39;fpm&#39;:
+                    ensure   =&gt; &#39;0.3.11&#39;,
+                    provider =&gt; gem;
+                &#39;hpricot&#39;:
+                    ensure   =&gt; &#39;0.8.5&#39;,
+                    provider =&gt; gem;
+                &#39;json&#39;:
+                    ensure   =&gt; &#39;1.6.3&#39;,
+                    provider =&gt; gem;
+                &#39;kgio&#39;:
+                    ensure   =&gt; &#39;2.6.0&#39;,
+                    provider =&gt; gem;
+                &#39;mustache&#39;:
+                    ensure   =&gt; &#39;0.99.4&#39;,
+                    provider =&gt; gem;
+                &#39;rack&#39;:
+                    ensure   =&gt; &#39;1.3.5&#39;,
+                    provider =&gt; gem;
+                &#39;rack-protection&#39;:
+                    ensure   =&gt; &#39;1.1.4&#39;,
+                    provider =&gt; gem;
+                &#39;raindrops&#39;:
+                    ensure   =&gt; &#39;0.8.0&#39;,
+                    provider =&gt; gem;
+                &#39;rdiscount&#39;:
+                    ensure   =&gt; &#39;1.6.8&#39;,
+                    provider =&gt; gem;
+                &#39;sinatra&#39;:
+                    ensure   =&gt; &#39;1.3.1&#39;,
+                    provider =&gt; gem;
+                &#39;tilt&#39;:
+                    ensure   =&gt; &#39;1.3.3&#39;,
+                    provider =&gt; gem;
+                &#39;unicorn&#39;:
+                    ensure   =&gt; &#39;4.1.1&#39;,
+                    provider =&gt; gem;
+            }
+        }
+        include rubygems
+    }
+    include packages
+    class services {
+        class sysvinit {
+            service { &#39;nginx&#39;:
+                enable    =&gt; true,
+                ensure    =&gt; running,
+                subscribe =&gt; [File[&#39;/etc/nginx/sites-available/example&#39;], File[&#39;/etc/nginx/sites-enabled/example&#39;], Package[&#39;nginx-common&#39;], Exec[&#39;82789250f3ad94d4cfeacc0a8cabae2d26b0270e.tar&#39;]],
+            }
+        }
+        include sysvinit
+        class upstart {
+            service { &#39;example&#39;:
+                enable    =&gt; true,
+                ensure    =&gt; running,
+                provider  =&gt; upstart,
+                subscribe =&gt; [File[&#39;/etc/unicorn.conf.rb&#39;], Exec[&#39;82789250f3ad94d4cfeacc0a8cabae2d26b0270e.tar&#39;]],
+            }
+        }
+        include upstart
+    }
+    include services
+    class sources {
+        exec { &#39;tar xf /tmp/82789250f3ad94d4cfeacc0a8cabae2d26b0270e.tar&#39;:
+            alias =&gt; &#39;/usr/local&#39;,
+            cwd   =&gt; &#39;/usr/local&#39;,
+        }
+        file { &#39;/tmp/82789250f3ad94d4cfeacc0a8cabae2d26b0270e.tar&#39;:
+            before =&gt; Exec[&#39;/usr/local&#39;],
+            group  =&gt; root,
+            mode   =&gt; 0644,
+            owner  =&gt; root,
+            source =&gt; &#39;puppet:///modules/example/tmp/82789250f3ad94d4cfeacc0a8cabae2d26b0270e.tar&#39;,
+        }
+    }
+    include sources
+}</code></pre>
+
+<p>Running <code>blueprint show -C example</code> creates <code>example/recipes/default.rb</code> as follows and bundles the source tarball containing our example application. <code>example/recipes/default.rb</code>:</p>
+
+<pre class="prettyprint"><code>#
+# Automatically generated by blueprint(7).  Edit at your own risk.
+#
+cookbook_file(&#39;/tmp/82789250f3ad94d4cfeacc0a8cabae2d26b0270e.tar&#39;) do
+  backup false
+  group &#39;root&#39;
+  mode &#39;0644&#39;
+  owner &#39;root&#39;
+  source &#39;tmp/82789250f3ad94d4cfeacc0a8cabae2d26b0270e.tar&#39;
+end
+execute(&#39;tar xf &quot;/tmp/82789250f3ad94d4cfeacc0a8cabae2d26b0270e.tar&quot;&#39;) { cwd &#39;/usr/local&#39; }
+directory(&#39;/etc/init&#39;) do
+  group &#39;root&#39;
+  mode &#39;0755&#39;
+  owner &#39;root&#39;
+  recursive true
+end
+cookbook_file(&#39;/etc/init/example.conf&#39;) do
+  backup false
+  group &#39;root&#39;
+  mode &#39;0644&#39;
+  owner &#39;root&#39;
+  source &#39;etc/init/example.conf&#39;
+end
+directory(&#39;/etc/nginx/sites-available&#39;) do
+  group &#39;root&#39;
+  mode &#39;0755&#39;
+  owner &#39;root&#39;
+  recursive true
+end
+cookbook_file(&#39;/etc/nginx/sites-available/example&#39;) do
+  backup false
+  group &#39;root&#39;
+  mode &#39;0644&#39;
+  owner &#39;root&#39;
+  source &#39;etc/nginx/sites-available/example&#39;
+end
+directory(&#39;/etc/nginx/sites-enabled&#39;) do
+  group &#39;root&#39;
+  mode &#39;0755&#39;
+  owner &#39;root&#39;
+  recursive true
+end
+link(&#39;/etc/nginx/sites-enabled/example&#39;) do
+  group &#39;root&#39;
+  owner &#39;root&#39;
+  to &#39;/etc/nginx/sites-available/example&#39;
+end
+directory(&#39;/etc&#39;) do
+  group &#39;root&#39;
+  mode &#39;0755&#39;
+  owner &#39;root&#39;
+  recursive true
+end
+cookbook_file(&#39;/etc/unicorn.conf.rb&#39;) do
+  backup false
+  group &#39;root&#39;
+  mode &#39;0644&#39;
+  owner &#39;root&#39;
+  source &#39;etc/unicorn.conf.rb&#39;
+end
+execute(&#39;apt-get -q update&#39;)
+package(&#39;mysql-client-5.1&#39;) { version &#39;5.1.58-1ubuntu1&#39; }
+package(&#39;nginx-common&#39;) { version &#39;1.0.5-1&#39; }
+package(&#39;nginx-light&#39;) { version &#39;1.0.5-1&#39; }
+package(&#39;ruby-dev&#39;) { version &#39;4.8&#39; }
+package(&#39;rubygems&#39;) { version &#39;1.7.2-1&#39; }
+gem_package(&#39;fpm&#39;) { version &#39;0.3.11&#39; }
+gem_package(&#39;hpricot&#39;) { version &#39;0.8.5&#39; }
+gem_package(&#39;json&#39;) { version &#39;1.6.3&#39; }
+gem_package(&#39;kgio&#39;) { version &#39;2.6.0&#39; }
+gem_package(&#39;mustache&#39;) { version &#39;0.99.4&#39; }
+gem_package(&#39;rack&#39;) { version &#39;1.3.5&#39; }
+gem_package(&#39;rack-protection&#39;) { version &#39;1.1.4&#39; }
+gem_package(&#39;raindrops&#39;) { version &#39;0.8.0&#39; }
+gem_package(&#39;rdiscount&#39;) { version &#39;1.6.8&#39; }
+gem_package(&#39;sinatra&#39;) { version &#39;1.3.1&#39; }
+gem_package(&#39;tilt&#39;) { version &#39;1.3.3&#39; }
+gem_package(&#39;unicorn&#39;) { version &#39;4.1.1&#39; }
+service(&#39;nginx&#39;) do
+  action [:enable, :start]
+  subscribes :restart, resources(&#39;cookbook_file[/etc/nginx/sites-available/example]&#39;, &#39;cookbook_file[/etc/nginx/sites-enabled/example]&#39;, &#39;package[nginx-common]&#39;, &#39;execute[82789250f3ad94d4cfeacc0a8cabae2d26b0270e.tar]&#39;)
+end
+service(&#39;example&#39;) do
+  action [:enable, :start]
+  provider Chef::Provider::Service::Upstart
+  subscribes :restart, resources(&#39;cookbook_file[/etc/unicorn.conf.rb]&#39;, &#39;execute[82789250f3ad94d4cfeacc0a8cabae2d26b0270e.tar]&#39;)
+end</code></pre>
+<hr /><h1 id='cloudformation'>Integrating with AWS CloudFormation</h1>
+<p>Production environments are much more than a rack of servers these days and nowhere is that more apparent than AWS. Blueprint integrates with AWS CloudFormation to provision and bootstrap entire infrastructures declaratively.</p>
+
+<p>The <code>--cfn</code> option to <code>blueprint-show</code>(1) generates the skeleton of a CloudFormation template that provisions a single EC2 instance running Amazon Linux (an RPM-based distribution supported by Amazon) which will apply the blueprint during its first boot.</p>
+
+<p>File templates and source tarballs aren&#8217;t supported seamlessly, however. File templates can be recreated using CloudFormation&#8217;s primitive string functions or an executable user-data. Source tarballs may reference fully-qualified URLs.</p>
+
+<h2 id='example'>Example</h2>
+
+<p>Running <code>blueprint show --cfn example</code> creates <code>example.json</code>:</p>
+
+<pre class="prettyprint"><code>{
+  &quot;AWSTemplateFormatVersion&quot;: &quot;2010-09-09&quot;, 
+  &quot;Description&quot;: &quot;Create an Amazon EC2 instance and bootstrap it as instructed by a blueprint.  This is intended to be a starting point for building larger architectures with AWS CloudFormation.  **WARNING** This template creates an Amazon EC2 instance.  You will be billed for the AWS resources used if you create a stack from this template.&quot;, 
+  &quot;Mappings&quot;: {
+    &quot;AWSInstanceType2Arch&quot;: {
+      &quot;c1.medium&quot;: {
+        &quot;Arch&quot;: &quot;32&quot;
+      }, 
+      &quot;c1.xlarge&quot;: {
+        &quot;Arch&quot;: &quot;64&quot;
+      }, 
+      &quot;cc1.4xlarge&quot;: {
+        &quot;Arch&quot;: &quot;64&quot;
+      }, 
+      &quot;m1.large&quot;: {
+        &quot;Arch&quot;: &quot;64&quot;
+      }, 
+      &quot;m1.small&quot;: {
+        &quot;Arch&quot;: &quot;32&quot;
+      }, 
+      &quot;m1.xlarge&quot;: {
+        &quot;Arch&quot;: &quot;64&quot;
+      }, 
+      &quot;m2.2xlarge&quot;: {
+        &quot;Arch&quot;: &quot;64&quot;
+      }, 
+      &quot;m2.4xlarge&quot;: {
+        &quot;Arch&quot;: &quot;64&quot;
+      }, 
+      &quot;m2.xlarge&quot;: {
+        &quot;Arch&quot;: &quot;64&quot;
+      }, 
+      &quot;t1.micro&quot;: {
+        &quot;Arch&quot;: &quot;32&quot;
+      }
+    }, 
+    &quot;AWSRegionArch2AMI&quot;: {
+      &quot;ap-northeast-1&quot;: {
+        &quot;32&quot;: &quot;ami-dcfa4edd&quot;, 
+        &quot;64&quot;: &quot;ami-e8fa4ee9&quot;
+      }, 
+      &quot;ap-southeast-1&quot;: {
+        &quot;32&quot;: &quot;ami-74dda626&quot;, 
+        &quot;64&quot;: &quot;ami-7edda62c&quot;
+      }, 
+      &quot;eu-west-1&quot;: {
+        &quot;32&quot;: &quot;ami-24506250&quot;, 
+        &quot;64&quot;: &quot;ami-20506254&quot;
+      }, 
+      &quot;us-east-1&quot;: {
+        &quot;32&quot;: &quot;ami-7f418316&quot;, 
+        &quot;64&quot;: &quot;ami-7341831a&quot;
+      }, 
+      &quot;us-west-1&quot;: {
+        &quot;32&quot;: &quot;ami-951945d0&quot;, 
+        &quot;64&quot;: &quot;ami-971945d2&quot;
+      }
+    }
+  }, 
+  &quot;Outputs&quot;: {
+    &quot;PublicDnsName&quot;: {
+      &quot;Description&quot;: &quot;Public DNS name of the EC2 instance.&quot;, 
+      &quot;Value&quot;: {
+        &quot;Fn::GetAtt&quot;: [
+          &quot;EC2Instance&quot;, 
+          &quot;PublicDnsName&quot;
+        ]
+      }
+    }
+  }, 
+  &quot;Parameters&quot;: {
+    &quot;InstanceType&quot;: {
+      &quot;AllowedValues&quot;: [
+        &quot;t1.micro&quot;, 
+        &quot;m1.small&quot;, 
+        &quot;m1.large&quot;, 
+        &quot;m1.xlarge&quot;, 
+        &quot;m2.xlarge&quot;, 
+        &quot;m2.2xlarge&quot;, 
+        &quot;m2.4xlarge&quot;, 
+        &quot;c1.medium&quot;, 
+        &quot;c1.xlarge&quot;, 
+        &quot;cc1.4xlarge&quot;
+      ], 
+      &quot;ConstraintDescription&quot;: &quot;must be a valid EC2 instance type.&quot;, 
+      &quot;Default&quot;: &quot;m1.small&quot;, 
+      &quot;Description&quot;: &quot;EC2 instance type.&quot;, 
+      &quot;Type&quot;: &quot;String&quot;
+    }, 
+    &quot;KeyName&quot;: {
+      &quot;Description&quot;: &quot;Name of an existing EC2 KeyPair to enable SSH access to the instances&quot;, 
+      &quot;Type&quot;: &quot;String&quot;
+    }
+  }, 
+  &quot;Resources&quot;: {
+    &quot;CfnUser&quot;: {
+      &quot;Properties&quot;: {
+        &quot;Path&quot;: &quot;/&quot;, 
+        &quot;Policies&quot;: [
+          {
+            &quot;PolicyDocument&quot;: {
+              &quot;Statement&quot;: [
+                {
+                  &quot;Action&quot;: &quot;cloudformation:DescribeStackResource&quot;, 
+                  &quot;Effect&quot;: &quot;Allow&quot;, 
+                  &quot;Resource&quot;: &quot;*&quot;
+                }
+              ]
+            }, 
+            &quot;PolicyName&quot;: &quot;root&quot;
+          }
+        ]
+      }, 
+      &quot;Type&quot;: &quot;AWS::IAM::User&quot;
+    }, 
+    &quot;EC2Instance&quot;: {
+      &quot;Metadata&quot;: {
+        &quot;AWS::CloudFormation::Init&quot;: {
+          &quot;config&quot;: {
+            &quot;files&quot;: {
+              &quot;/etc/init/example.conf&quot;: {
+                &quot;content&quot;: &quot;description \&quot;Example\&quot;\nstart on runlevel [2345]\nstop on runlevel [!2345]\nrespawn\nchdir /usr/local/share/rack/example\nexec unicorn -c /etc/unicorn.conf.rb\n# Dear Blueprint, restart me when /etc/database.yml changes.\n&quot;, 
+                &quot;encoding&quot;: &quot;plain&quot;, 
+                &quot;group&quot;: &quot;root&quot;, 
+                &quot;mode&quot;: &quot;100644&quot;, 
+                &quot;owner&quot;: &quot;root&quot;
+              }, 
+              &quot;/etc/nginx/sites-available/example&quot;: {
+                &quot;content&quot;: &quot;server {\n\tlisten 80 default;\n\tlocation /static { root /usr/local/share/rack/example/static; }\n\tlocation / { proxy_pass http://127.0.0.1:8080; }\n}\n&quot;, 
+                &quot;encoding&quot;: &quot;plain&quot;, 
+                &quot;group&quot;: &quot;root&quot;, 
+                &quot;mode&quot;: &quot;100644&quot;, 
+                &quot;owner&quot;: &quot;root&quot;
+              }, 
+              &quot;/etc/nginx/sites-enabled/example&quot;: {
+                &quot;content&quot;: &quot;/etc/nginx/sites-available/example&quot;, 
+                &quot;encoding&quot;: &quot;plain&quot;, 
+                &quot;group&quot;: &quot;root&quot;, 
+                &quot;mode&quot;: &quot;120777&quot;, 
+                &quot;owner&quot;: &quot;root&quot;
+              }, 
+              &quot;/etc/unicorn.conf.rb&quot;: {
+                &quot;content&quot;: &quot;worker_processes 4\n&quot;, 
+                &quot;encoding&quot;: &quot;plain&quot;, 
+                &quot;group&quot;: &quot;root&quot;, 
+                &quot;mode&quot;: &quot;100644&quot;, 
+                &quot;owner&quot;: &quot;root&quot;
+              }
+            }, 
+            &quot;packages&quot;: {
+              &quot;apt&quot;: {
+                &quot;mysql-client-5.1&quot;: [
+                  &quot;5.1.58-1ubuntu1&quot;
+                ], 
+                &quot;nginx-common&quot;: [
+                  &quot;1.0.5-1&quot;
+                ], 
+                &quot;nginx-light&quot;: [
+                  &quot;1.0.5-1&quot;
+                ], 
+                &quot;ruby-dev&quot;: [
+                  &quot;4.8&quot;
+                ], 
+                &quot;rubygems&quot;: [
+                  &quot;1.7.2-1&quot;
+                ]
+              }, 
+              &quot;rubygems&quot;: {
+                &quot;fpm&quot;: [
+                  &quot;0.3.11&quot;
+                ], 
+                &quot;hpricot&quot;: [
+                  &quot;0.8.5&quot;
+                ], 
+                &quot;json&quot;: [
+                  &quot;1.6.3&quot;
+                ], 
+                &quot;kgio&quot;: [
+                  &quot;2.6.0&quot;
+                ], 
+                &quot;mustache&quot;: [
+                  &quot;0.99.4&quot;
+                ], 
+                &quot;rack&quot;: [
+                  &quot;1.3.5&quot;
+                ], 
+                &quot;rack-protection&quot;: [
+                  &quot;1.1.4&quot;
+                ], 
+                &quot;raindrops&quot;: [
+                  &quot;0.8.0&quot;
+                ], 
+                &quot;rdiscount&quot;: [
+                  &quot;1.6.8&quot;
+                ], 
+                &quot;sinatra&quot;: [
+                  &quot;1.3.1&quot;
+                ], 
+                &quot;tilt&quot;: [
+                  &quot;1.3.3&quot;
+                ], 
+                &quot;unicorn&quot;: [
+                  &quot;4.1.1&quot;
+                ]
+              }
+            }, 
+            &quot;services&quot;: {
+              &quot;sysvinit&quot;: {
+                &quot;nginx&quot;: {
+                  &quot;enable&quot;: true, 
+                  &quot;ensureRunning&quot;: true, 
+                  &quot;files&quot;: [
+                    &quot;/etc/nginx/sites-enabled/example&quot;, 
+                    &quot;/etc/nginx/sites-available/example&quot;
+                  ], 
+                  &quot;packages&quot;: {
+                    &quot;apt&quot;: [
+                      &quot;nginx-common&quot;
+                    ]
+                  }, 
+                  &quot;sources&quot;: [
+                    &quot;/usr/local&quot;
+                  ]
+                }
+              }, 
+              &quot;upstart&quot;: {
+                &quot;example&quot;: {
+                  &quot;enable&quot;: true, 
+                  &quot;ensureRunning&quot;: true, 
+                  &quot;files&quot;: [
+                    &quot;/etc/unicorn.conf.rb&quot;
+                  ], 
+                  &quot;sources&quot;: [
+                    &quot;/usr/local&quot;
+                  ]
+                }
+              }
+            }, 
+            &quot;sources&quot;: {
+              &quot;/usr/local&quot;: &quot;82789250f3ad94d4cfeacc0a8cabae2d26b0270e.tar&quot;
+            }
+          }
+        }
+      }, 
+      &quot;Properties&quot;: {
+        &quot;ImageId&quot;: {
+          &quot;Fn::FindInMap&quot;: [
+            &quot;AWSRegionArch2AMI&quot;, 
+            {
+              &quot;Ref&quot;: &quot;AWS::Region&quot;
+            }, 
+            {
+              &quot;Fn::FindInMap&quot;: [
+                &quot;AWSInstanceType2Arch&quot;, 
+                {
+                  &quot;Ref&quot;: &quot;InstanceType&quot;
+                }, 
+                &quot;Arch&quot;
+              ]
+            }
+          ]
+        }, 
+        &quot;InstanceType&quot;: {
+          &quot;Ref&quot;: &quot;InstanceType&quot;
+        }, 
+        &quot;KeyName&quot;: {
+          &quot;Ref&quot;: &quot;KeyName&quot;
+        }, 
+        &quot;SecurityGroups&quot;: [
+          {
+            &quot;Ref&quot;: &quot;SecurityGroup&quot;
+          }
+        ], 
+        &quot;UserData&quot;: {
+          &quot;Fn::Base64&quot;: {
+            &quot;Fn::Join&quot;: [
+              &quot;&quot;, 
+              [
+                &quot;#!/bin/bash\n&quot;, 
+                &quot;/opt/aws/bin/cfn-init -s &quot;, 
+                {
+                  &quot;Ref&quot;: &quot;AWS::StackName&quot;
+                }, 
+                &quot; -r EC2Instance &quot;, 
+                &quot; --access-key &quot;, 
+                {
+                  &quot;Ref&quot;: &quot;HostKeys&quot;
+                }, 
+                &quot; --secret-key &quot;, 
+                {
+                  &quot;Fn::GetAtt&quot;: [
+                    &quot;HostKeys&quot;, 
+                    &quot;SecretAccessKey&quot;
+                  ]
+                }, 
+                &quot; --region &quot;, 
+                {
+                  &quot;Ref&quot;: &quot;AWS::Region&quot;
+                }, 
+                &quot;\n&quot;, 
+                &quot;/opt/aws/bin/cfn-signal -e $? &#39;&quot;, 
+                {
+                  &quot;Ref&quot;: &quot;WaitHandle&quot;
+                }, 
+                &quot;&#39;\n&quot;
+              ]
+            ]
+          }
+        }
+      }, 
+      &quot;Type&quot;: &quot;AWS::EC2::Instance&quot;
+    }, 
+    &quot;HostKeys&quot;: {
+      &quot;Properties&quot;: {
+        &quot;UserName&quot;: {
+          &quot;Ref&quot;: &quot;CfnUser&quot;
+        }
+      }, 
+      &quot;Type&quot;: &quot;AWS::IAM::AccessKey&quot;
+    }, 
+    &quot;SecurityGroup&quot;: {
+      &quot;Properties&quot;: {
+        &quot;GroupDescription&quot;: &quot;SSH access only.&quot;, 
+        &quot;SecurityGroupIngress&quot;: [
+          {
+            &quot;CidrIp&quot;: &quot;0.0.0.0/0&quot;, 
+            &quot;FromPort&quot;: &quot;22&quot;, 
+            &quot;IpProtocol&quot;: &quot;tcp&quot;, 
+            &quot;ToPort&quot;: &quot;22&quot;
+          }
+        ]
+      }, 
+      &quot;Type&quot;: &quot;AWS::EC2::SecurityGroup&quot;
+    }, 
+    &quot;WaitCondition&quot;: {
+      &quot;DependsOn&quot;: &quot;EC2Instance&quot;, 
+      &quot;Properties&quot;: {
+        &quot;Handle&quot;: {
+          &quot;Ref&quot;: &quot;WaitHandle&quot;
+        }, 
+        &quot;Timeout&quot;: &quot;600&quot;
+      }, 
+      &quot;Type&quot;: &quot;AWS::CloudFormation::WaitCondition&quot;
+    }, 
+    &quot;WaitHandle&quot;: {
+      &quot;Type&quot;: &quot;AWS::CloudFormation::WaitConditionHandle&quot;
+    }
+  }
+}</code></pre>
+<hr /><h1 id='deploy'>Deploying your application with Blueprint</h1>
+<p>The example running throughout this tutorial takes advantage of Blueprint&#8217;s default handling of <code>/usr/local</code> to package up an example web application. As an application grows, this can become muddled by other packages you install from source.</p>
+
+<p>Blueprint doesn&#8217;t dictate how you deploy your applications but here are a few options play very nicely with Blueprint.</p>
+
+<ul>
+<li>Build Debian packages or RPMs for your application. These packages can include service init scripts or configuration files which Blueprint will take into account when restarting services after a deploy.</li>
+
+<li>Use Blueprint to scaffold your application deployment and some other method (possibly via SSH tools like Capistrano or Fabric) to actually deploy.</li>
+</ul>
+
+<p>And remember to use templates to render configuration files appropriately in development, staging, and production.</p>
+<hr /><h1 id='git'>Local Git repository</h1>
+<p>Blueprints are stored in the local Git repository <code>~/.blueprints.git</code>. Direct access isn&#8217;t typically needed but Blueprint comes with the <code>blueprint-git</code>(1) tool that simplifies the parameters to <code>git</code>(1) needed to use this repository.</p>
+
+<h2 id='example'>Example</h2>
+
+<p>Clone the entire local Git repository into <code>blueprints</code> in the working directory:</p>
+
+<pre class="prettyprint"><code>blueprint git clone</code></pre>
+
+<p>Show the diff, from Git&#8217;s point-of-view, between the previous two revisions of the <em>example</em> blueprint:</p>
+
+<pre class="prettyprint"><code>blueprint git show example</code></pre>
+
+<p>The JSON document is pretty-printed for storage so Git&#8217;s diffs will actually be meaningful.</p>
+<hr /><h1 id='server'>Running your own Blueprint Server</h1>
+<p><strong>DevStructure runs a free Blueprint Server at <code>devstructure.com</code> but this service will not be available after June 30<sup>th</sup>, 2012.</strong></p>
+
+<p>Running a Blueprint Server opens up the <code>blueprint-push</code>(1) and <code>blueprint-pull</code>(1) commands so you can store your blueprints remotely and share them with your team.</p>
+
+<p>The Blueprint Server <a href='#protocols'>protocols</a> and <a href='#endpoints'>endpoints</a> are documented for adventurous users that want to implement their own client or server.</p>
+
+<h2 id='installation'>Installation</h2>
+
+<p>Prerequisites:</p>
+
+<ul>
+<li><a href='http://code.google.com/p/boto/'>Boto</a></li>
+
+<li><a href='http://flask.pocoo.org'>Flask</a></li>
+
+<li><a href='http://gunicorn.org'>GUnicorn</a></li>
+</ul>
+
+<p>Install the prerequisites from PyPI:</p>
+
+<pre class="prettyprint"><code>sudo pip install boto flask gunicorn</code></pre>
+
+<p>The rest of Blueprint Server comes bundled with Blueprint itself in the <code>blueprint.io.server</code> module.</p>
+
+<h2 id='configuration'>Configuration</h2>
+
+<p>Configure your Blueprint Server in <code>/etc/blueprint.cfg</code>:</p>
+<pre class="prettyprint"><code>[s3]
+access_key = <em>access_key</em>
+secret_key = <em>secret_key</em>
+bucket = <em>bucket</em></code></pre>
+<p>Configure your other servers to communicate with the Blueprint Server in <code>/etc/blueprint.cfg</code>:</p>
+<pre class="prettyprint"><code>[io]
+server = <em>server</em></code></pre>
+<p>Supervise Blueprint Server with Upstart on Ubuntu or CentOS 6:</p>
+
+<pre class="prettyprint"><code>description &quot;Blueprint Server&quot;
+
+start on runlevel [2345]
+stop on runlevel [!2345]
+
+respawn
+
+env VIA=upstart
+
+pre-start exec mkdir -p /var/log/blueprint-server
+
+exec gunicorn -p/var/run/blueprint-server.pid -b0.0.0.0:5000 -w4 blueprint.io.server:app &gt;&gt;/var/log/blueprint-server/error.log 2&gt;&amp;1
+
+# Mention /etc/blueprint.cfg so Blueprint will connect this service to that file.</code></pre>
+
+<p>Other platforms will have similar production configurations.</p>
+
+<h2 id='usage'>Usage</h2>
+
+<p>Start the server in development mode:</p>
+
+<pre class="prettyprint"><code>python /usr/lib/python2.7/dist-packages/blueprint/io/server/__init__.py</code></pre>
+
+<p>(Note that the pathname may be different on your system, particularly if you installed Blueprint from source or from PyPI.)</p>
+
+<p>Start the server in production mode running in the foreground:</p>
+
+<pre class="prettyprint"><code>gunicorn blueprint.io.server:app</code></pre>
+
+<p>Some sort of process supervision, like Upstart as shown above, is recommended for production use.</p>
+
+<h2 id='example'>Example</h2>
+
+<p>First, start your Blueprint Server:</p>
+
+<pre class="prettyprint"><code>start blueprint-server</code></pre>
+
+<p>Push one of your blueprints to the Blueprint Server for safe-keeping or sharing with others:</p>
+
+<pre class="prettyprint"><code>blueprint push example</code></pre>
+
+<p>Pull a blueprint from the Blueprint Server to configure new development environments or extra production capacity:</p>
+
+<pre class="prettyprint"><code>blueprint pull example</code></pre>
+<hr /><h1 id='protocols'>Blueprint Server Protocols</h1>
+<p>Prerequisite: obtain a secret key via the <code>GET /secret</code> endpoint.</p>
+
+<h2 id='storing_a_blueprint'>Storing a blueprint</h2>
+
+<ol>
+<li>Store the JSON representation of a blueprint via the <a href='#PUT-blueprint'><code>PUT /<em>secret</em>/<em>name</em></code></a> endpoint.</li>
+
+<li>Store each tarball referenced in the <code>&quot;sources&quot;</code> object in the blueprint via the <a href='#PUT-tarball'><code>PUT /<em>secret</em>/<em>name</em>/<em>sha</em>.tar</code></a> endpoint.</li>
+</ol>
+
+<h2 id='fetching_a_blueprint'>Fetching a blueprint</h2>
+
+<ol>
+<li>Fetch the JSON representation of a blueprint via the <a href='#GET-blueprint'><code>GET /<em>secret</em>/<em>name</em></code></a> endpoint.</li>
+
+<li>Fetch each tarball referenced in the <code>&quot;sources&quot;</code> object in the blueprint via the <a href='#GET-tarball'><code>GET /<em>secret</em>/<em>name</em>/<em>sha</em>.tar</code></a> endpoint.</li>
+</ol>
+
+<h2 id='bootstrapping_on_aws'>Bootstrapping on AWS</h2>
+
+<ol>
+<li>Fetch the user data script for a blueprint via the <a href='#GET-user-data'><code>GET /<em>secret</em>/<em>name</em>/user-data.sh</code></a> endpoint.</li>
+
+<li>Provision instances with the script as their user data via the AWS Management Console or an argument to the EC2 command-line tools.</li>
+</ol>
+
+<h2 id='configuring_production_instances'>Configuring production instances</h2>
+
+<p>Production instances can use blueprints without installing Blueprint (and therefore Git and friends) by asking the Blueprint I/O Server to generate POSIX shell code.</p>
+
+<ol>
+<li>Fetch the POSIX shell representation of the blueprint via the <a href='#GET-sh'><code>GET /<em>secret</em>/<em>name</em>/<em>name</em>.sh</code></a> endpoint. The resulting program will fetch tarballs as needed via the <a href='#GET-tarball'><code>GET /<em>secret</em>/<em>name</em>/<em>sha</em>.tar</code></a> endpoint.</li>
+
+<li />
+</ol>
+<hr /><h1 id='endpoints'>Blueprint Server Endpoints</h1><h2 id='GET-secret'><code>GET /secret</code></h2>
+<p>Create a new secret key known only to the caller. This is the namespace beneath which the caller&#8217;s blueprints are stored.</p>
+
+<p>Responses:</p>
+
+<ul>
+<li>201: success; the body contains a new 64-byte secret key.</li>
+
+<li>502: failure; the upstream storage service failed.</li>
+</ul>
+<h2 id='PUT-blueprint'><code>PUT /<em>secret</em>/<em>name</em></code></h2>
+<p>Store the JSON representation of the blueprint <em>name</em>. The <code>Content-Type</code> of the body must be <code>application/json</code>.</p>
+
+<p>Parameters:</p>
+
+<ul>
+<li><em>secret</em>: a 64-byte identifier containing numbers, letters, underscores, and dashes.</li>
+
+<li><em>name</em>: a blueprint name; it may not contain whitespace or <code>/</code> characters.</li>
+</ul>
+
+<p>Responses:</p>
+
+<ul>
+<li>202: success; the blueprint was well-formed and stored; the body contains pre-signed URIs for uploading source tarballs.</li>
+
+<li>400: failure; the blueprint was not well-formed.</li>
+
+<li>502: failure; the upstream storage service failed.</li>
+</ul>
+<h2 id='GET-blueprint'><code>GET /<em>secret</em>/<em>name</em></code></h2>
+<p>Fetch the JSON representation of the blueprint <em>name</em>.</p>
+
+<p>Parameters:</p>
+
+<ul>
+<li><em>secret</em>: a 64-byte identifier containing numbers, letters, underscores, and dashes.</li>
+
+<li><em>name</em>: a blueprint name; it may not contain whitespace or <code>/</code> characters.</li>
+</ul>
+
+<p>Responses:</p>
+
+<ul>
+<li>200: success; the body contains the JSON representation of the blueprint <em>name</em>.</li>
+
+<li>404: failure; the <em>secret</em> or blueprint <em>name</em> was not found.</li>
+
+<li>502: failure; the upstream storage service failed.</li>
+</ul>
+<h2 id='PUT-tarball'><code>PUT /<em>secret</em>/<em>name</em>/<em>sha</em>.tar</code></h2>
+<p>Store a source tarball referenced by blueprint <em>name</em>. The <code>Content-Type</code> of the body must be <code>application/x-tar</code>.</p>
+
+<p>Parameters:</p>
+
+<ul>
+<li><em>secret</em>: a 64-byte identifier containing numbers, letters, underscores, and dashes.</li>
+
+<li><em>name</em>: a blueprint name; it may not contain whitespace or <code>/</code> characters.</li>
+
+<li><em>sha</em>: a 40-byte hexadecimal representation of a SHA1 sum.</li>
+</ul>
+
+<p>Responses:</p>
+
+<ul>
+<li>202: success; the tarball was stored.</li>
+
+<li>400: failure; the SHA1 sum of the body did not match <em>sha</em>.</li>
+
+<li>404: failure; the <em>secret</em> or blueprint <em>name</em> was not found.</li>
+
+<li>502: failure; the upstream storage service failed.</li>
+</ul>
+<h2 id='GET-tarball'><code>GET /<em>secret</em>/<em>name</em>/<em>sha</em>.tar</code></h2>
+<p>Fetch a source tarball referenced by blueprint <em>name</em>.</p>
+
+<p>Parameters:</p>
+
+<ul>
+<li><em>secret</em>: a 64-byte identifier containing numbers, letters, underscores, and dashes.</li>
+
+<li><em>name</em>: a blueprint name; it may not contain whitespace or <code>/</code> characters.</li>
+
+<li><em>sha</em>: a 40-byte hexadecimal representation of a SHA1 sum.</li>
+</ul>
+
+<p>Responses:</p>
+
+<ul>
+<li>200: success; the body contains the <code>application/x-tar</code> content of the source tarball.</li>
+
+<li>404: failure; the <em>secret</em>, blueprint <em>name</em>, or <em>sha</em> was not found.</li>
+
+<li>502: failure; the upstream storage service failed.</li>
+</ul>
+<h2 id='GET-sh'><code>GET /<em>secret</em>/<em>name</em>/<em>name</em>.sh</code></h2>
+<p>Fetch the POSIX shell representation of the blueprint <em>name</em>. The resulting program will fetch tarballs as needed via the <code>GET /<em>secret</em>/<em>name</em>/<em>sha</em>.tar</code> endpoint.</p>
+
+<p>Parameters:</p>
+
+<ul>
+<li><em>secret</em>: a 64-byte identifier containing numbers, letters, underscores, and dashes.</li>
+
+<li><em>name</em>: a blueprint name; it may not contain whitespace or <code>/</code> characters.</li>
+</ul>
+
+<p>Responses:</p>
+
+<ul>
+<li>200: success; the body contains the POSIX shell representation of the blueprint <em>name</em>.</li>
+
+<li>404: failure; the <em>secret</em> or blueprint <em>name</em> was not found.</li>
+
+<li>502: failure; the upstream storage service failed.</li>
+</ul>
+<h2 id='GET-user-data'><code>GET /<em>secret</em>/<em>name</em>/user-data.sh</code></h2>
+<p>Fetch POSIX shell commands to download and apply the blueprint <em>name</em>. EC2 instances provisioned from an AMI with <a href='https://help.ubuntu.com/community/CloudInit'><code>cloud-init</code></a> will execute this program if given as user data.</p>
+
+<p>Parameters:</p>
+
+<ul>
+<li><em>secret</em>: a 64-byte identifier containing numbers, letters, underscores, and dashes.</li>
+
+<li><em>name</em>: a blueprint name; it may not contain whitespace or <code>/</code> characters.</li>
+</ul>
+
+<p>Responses:</p>
+
+<ul>
+<li>200: success; the body contains the POSIX shell representation of the blueprint <em>name</em>.</li>
+
+<li>404: failure; the <em>secret</em> or blueprint <em>name</em> was not found.</li>
+
+<li>502: failure; the upstream storage service failed.</li>
+</ul>
+<hr /><h1 id='contributing'>Contributing to Blueprint</h1>
+<p>Blueprint is open-source, BSD-licensed software. Contributions are welcome via pull requests on GitHub.</p>
+
+<ul>
+<li>Source code: <a href='https://github.com/devstructure/blueprint'>https://github.com/devstructure/blueprint</a></li>
+
+<li>Issue tracker: <a href='https://github.com/devstructure/blueprint/issues'>https://github.com/devstructure/blueprint/issues</a></li>
+
+<li>Mailing list: <a href='https://groups.google.com/forum/#!forum/blueprint-users'>https://groups.google.com/forum/#!forum/blueprint-users</a></li>
+
+<li>IRC: <a href='irc://freenode.net/devstructure'><code>irc.freenode.net#devstructure</code></a></li>
+</ul>
+<hr /><h1 id='alternatives'>Alternatives to Blueprint</h1>
+<p>If Blueprint&#8217;s not your cup of tea, check out the following tools. It&#8217;s much better to have some form of configuration management than none at all.</p>
+
+<ul>
+<li><a href='http://docs.puppetlabs.com'>Puppet</a></li>
+
+<li><a href='http://wiki.opscode.com/display/chef/Home'>Chef</a></li>
+
+<li><a href='http://trac.mcs.anl.gov/projects/bcfg2/'>Bcfg2</a></li>
+
+<li><a href='http://cfengine.com/'>CFEngine</a></li>
+
+<li><a href='http://juju.ubuntu.com/'>Juju</a></li>
+</ul>
+<!-- <script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-17254925-1']);
+_gaq.push(['_setDomainName', '.devstructure.com']);
+_gaq.push(['_trackPageview']);
+(function() {
+var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>-->
+<hr />
+Style credits:
+<a target="_blank" href="http://thomasf.github.io/solarized-css/">Solarized CSS</a>
+<a target="_blank" href="http://subtech.g.hatena.ne.jp/h2u/20110408/1302198319">Solarized Prettify</a>
+<a target="_blank" href="https://code.google.com/p/google-code-prettify/">Code Prettify</a>
+<a target="_blank" href="http://stackoverflow.com/questions/12232675/how-to-make-table-of-contents-floating">Floating TOC</a>
+<!-- jQuery 1.7.2+ or Zepto.js 1.0+ -->
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script> 
+
+<!-- Magnific Popup core JS file -->
+<script src="js/magnific-popup.js"></script> 
+<script src="js/magnific-popup-wmf.js"></script> 
+</body>
+</html>

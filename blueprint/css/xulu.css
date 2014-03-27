@@ -1,0 +1,82 @@
+body {
+min-width: 240px;
+max-width: 520px; /* 60-80 chars per line is best practice for readability.  520px is about 70 chars */
+padding: 1em;
+margin-left: auto;
+margin-right: auto;
+  
+}
+/* toc header */
+h3:nth-of-type(1) {
+  margin: 0;  
+  padding: 1em;
+  position: fixed;
+  top: 0;
+  right: 0;
+  color: #999;
+  background-color: #f2f2f2;
+  z-index: 1;
+}
+/* toc list */
+h3:nth-of-type(1) + ol {
+  display: none;
+  margin-top: 0;
+  padding: 3em 1em 5em 4em;
+  position: fixed;
+  top: 0;
+  right: 0;
+  background: #f2f2f2;
+  overflow: auto;
+  height: auto;
+  max-width: 80%;
+  opacity:0.95;
+  filter:alpha(opacity=95); /* For IE8 and earlier */
+  border-bottom: solid 1px #999;
+}
+h3:nth-of-type(1):hover   {
+  background: #e5e5e5;
+  color: #000;
+  border-bottom: solid 1px #999;
+}
+h3:nth-of-type(1):hover + ol,
+h3:nth-of-type(1) + ol:hover  {
+  display: block;
+}
+
+
+h3:nth-of-type(2) {
+  margin: 0;
+  padding: 1em;
+  position: fixed;
+  top:4em;
+  right:0;
+  color: #999;
+  background-color: #f2f2f2;
+  z-index: 1;
+}
+/* toc list */
+h3:nth-of-type(2) + ul {
+  display: none;
+  margin-top: 0;
+  padding: 3em 1em 5em 4em;
+  position: fixed;
+  top: 0px;
+  right:0;
+  background: #f2f2f2;
+  overflow: auto;
+  height: auto;
+  max-width: 80%;
+  opacity:0.95;
+  filter:alpha(opacity=95); /* For IE8 and earlier */
+  border-bottom: solid 1px #999;
+}
+h3:nth-of-type(2):hover   {
+  background: #e5e5e5;
+  color: #000;
+  border-bottom: solid 1px #999;
+}
+h3:nth-of-type(2):hover + ul,
+h3:nth-of-type(2) + ul:hover  {
+  display: block;
+}
+

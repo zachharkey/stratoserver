@@ -1,0 +1,5 @@
+rsync -e 'ssh' -rt --delete /Users/winstonford/Documents/Projects/Stratos/www/ s:'/var/www' 1>/dev/null
+
+
+
+## for portability put or symlink webdocs in shared / universal path OR have username variable in path

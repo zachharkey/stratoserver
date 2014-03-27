@@ -1,0 +1,100 @@
+/* WMF */
+/* in solarized-light.css code, pre, and pre code had to set background-color: none; in order for prettify-solarized to work properly.  For some reason spec'ing the same here did not work, even though this sheet loads after. The problem is that <pre> and <code> text inherits a light bg color. */
+
+
+
+h1#blueprint
+    {
+    font-family:'Conv_SaucerBB'; 
+    color: rgba(50, 88, 201, 0.5);
+
+    /*color: #3258C9;*/
+    font-size: 380%;
+    }
+
+    h1
+    {
+    font-family:'Conv_Draftsman'; 
+    text-transform: uppercase;
+    font-size: 200%;
+    
+    }
+    h2
+    {
+    font-size: 180%;
+    
+    }
+
+    body
+    {
+    font-family: Verdana, Arial, sans-serif;
+    max-width: 600px;
+    margin: auto;
+    padding-left: 5%;
+    background-color: none;
+    
+    }
+    pre
+    {
+    line-height: 1.5;
+    margin: 5%;
+    }
+
+    #toca-switch {
+    font-family:'Conv_Draftsman'; 
+    text-transform: uppercase;
+    font-size: 100%;
+    position: fixed;
+    margin-left: -7.8%;
+    top: 82px;
+    background-color:#fdf2ef;
+    border-color: #888895;
+    border: solid;
+    border-width: 1px;
+    padding:2px;
+    }
+
+    #toca-switch #toca-panel { display: none; } /* Hide the full TOC by default */
+
+    #toca-switch:hover #toca-panel{
+    display: block; /* Show it on hover */
+    } 
+
+    #toca-panel {
+    font-family: Verdana, Arial, sans-serif;
+    text-transform: none;
+    }
+
+    #man-switch {
+    font-family:'Conv_Draftsman'; 
+    text-transform: uppercase;
+    font-size: 100%;
+    position: fixed;
+    margin-left: -7.8%;
+    top: 102px;
+    background-color:#fdf2ef;
+    border-color: #888895;
+    border: solid;
+    border-width: 1px;
+    padding:2px;
+    }
+
+    #man-switch #man-panel { display: none; } /* Hide the full TOC by default */
+
+    #man-switch:hover #man-panel{
+    display: block; /* Show it on hover */    
+    }
+
+    #man-panel {
+    font-family: Verdana, Arial, sans-serif;
+    text-transform: none;
+    }
+
+    /* magnific popup */
+
+    .mfp-title {
+    position:absolute;
+    color: #FFF;
+    background: red;
+    }
+
