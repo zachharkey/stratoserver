@@ -5,7 +5,6 @@
 <style>
 html { 
   /*background: url(https://farm4.staticflickr.com/3714/13206667144_61ba565871_k.jpg) no-repeat center center fixed; */
-  background: url(img/crowsnest-2048x1536.jpg) no-repeat center center fixed; 
   -webkit-background-size: cover;
   -moz-background-size: cover;
   -o-background-size: cover;
@@ -57,20 +56,22 @@ a {
 }
 
 
-.wrapper{
-  background:#000;
-  bottom: 0;
+.stratos-box{
   height: 650px;
-  left: 0;
+  width: 550px;
   margin: auto;
+  background:#000;
+
+  position: absolute;
+  bottom: 0;
+  left: 0;
   right: 0;
-position: absolute;
   top: 0;
-width: 550px;
 opacity:0.8;
 filter:alpha(opacity=80); /* For IE8 and earlier */
 -moz-border-radius: 15px;
 border-radius: 15px;
+z-index: 10;
 } 
 
 .logo {
@@ -80,7 +81,15 @@ font-size: 90%;
 }
 
 .clicky {display: none;}
-
+.background {
+    background: url(img/crowsnest-2048x1536.jpg) no-repeat center center fixed; 
+    position: absolute;
+    top:0;right:0;bottom:0;left:0;
+    z-index: -2;
+}
+#video-underlay {
+    z-index: -1;
+}
 
 </style>
 
@@ -91,7 +100,7 @@ font-size: 90%;
 
 <body>
 
-<div class="wrapper">
+<div class="stratos-box">
 
 
 
@@ -143,12 +152,15 @@ font-size: 90%;
 
 </div>
 
+<div class="background"></div>
+
 <script type="text/javascript">
  $().ready(function() {
-                $('#wrapper').tubular({videoId: 'dYw4meRWGd4'}); // where idOfYourVideo is the YouTube ID.
+                $('#video-underlay').tubular({videoId: 'AjzzqDNiCZw'}); // where idOfYourVideo is the YouTube ID.
         });
  </script>
- <div id="wrapper"></div>
+ <div id="video-underlay"></div>
+
 <a class="clicky" title="Google Analytics Alternative" href="http://clicky.com/100674942"><img alt="Google Analytics Alternative" src="//static.getclicky.com/media/links/badge.gif" border="0" /></a>
 <script type="text/javascript">
 var clicky_site_ids = clicky_site_ids || [];
